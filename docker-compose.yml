@@ -1,0 +1,42 @@
+version: "3.9"
+
+services:
+  backend:
+    build: ./backend
+    container_name: orders-backend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/ordersdb
+      - PORT=3000
+    depends_on:
+      - mongo
+    networks:
+      - app-network
+
+  mongo:
+    image: mongo:6
+    container_name: mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - app-network
+
+  frontend:
+    build: ./frontend
+    container_name: orders-frontend
+    restart: always
+    ports:
+      - "8080:80"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+
+volumes:
+  mongo_data:

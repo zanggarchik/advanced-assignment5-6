@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD Operations</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h2 { color: #333; }
+        .container { display: flex; flex-direction: column; max-width: 600px; margin: 0 auto; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { font-weight: bold; }
+        .form-group input, .form-group select, .form-group button { width: 100%; padding: 8px; margin-top: 5px; }
+        .form-group button { cursor: pointer; background-color: #4CAF50; color: white; }
+        .form-group button:hover { background-color: #45a049; }
+        #orders-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        #orders-table th, #orders-table td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        #orders-table th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+
+    <h2>Order Management System</h2>
+
+    <!-- Create Order Form -->
+    <div class="container">
+        <h3>Create Order</h3>
+        <div class="form-group">
+            <label for="create-order-id">Order ID</label>
+            <input type="number" id="create-order-id" placeholder="Order ID" required>
+        </div>
+        <div class="form-group">
+            <label for="create-customer-id">Customer ID</label>
+            <input type="number" id="create-customer-id" placeholder="Customer ID" required>
+        </div>
+        <div class="form-group">
+            <label for="create-order-date">Order Date</label>
+            <input type="datetime-local" id="create-order-date" required>
+        </div>
+        <div class="form-group">
+            <label for="create-amount">Amount</label>
+            <input type="number" id="create-amount" placeholder="Amount" required>
+        </div>
+        <div class="form-group">
+            <label for="create-status">Status</label>
+            <select id="create-status">
+                <option value="pending">Pending</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <button onclick="createOrder()">Create Order</button>
+        </div>
+    </div>
+
+    <!-- Update Order Form -->
+    <div class="container">
+        <h3>Update Order</h3>
+        <div class="form-group">
+            <label for="update-order-id">Order ID</label>
+            <input type="text" id="update-order-id" placeholder="Order ID" required>
+        </div>
+        <div class="form-group">
+            <label for="update-order-status">New Status</label>
+            <select id="update-order-status">
+                <option value="pending">Pending</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <button onclick="updateOrder()">Update Order</button>
+        </div>
+    </div>
+
+    <!-- Search Orders Form -->
+    <div class="container">
+        <h3>Search Orders</h3>
+        <div class="form-group">
+            <label for="search-customer-id">Customer ID</label>
+            <input type="number" id="search-customer-id" placeholder="Customer ID">
+        </div>
+        <div class="form-group">
+            <label for="search-status">Status</label>
+            <select id="search-status">
+                <option value="pending">Pending</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <button onclick="searchOrders()">Search Orders</button>
+        </div>
+    </div>
+
+    <!-- Orders Table -->
+    <div class="container">
+        <h3>All Orders</h3>
+        <table id="orders-table">
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Customer ID</th>
+                    <th>Order Date</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="orders-tbody">
+                <!-- Order rows will be dynamically inserted here -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const apiUrl = 'http://98.81.148.41:3000/api'; // Use your server's public IP address here
+
+        // Create Order
+
+// Create Order
+function createOrder() {
+    const orderId = document.getElementById('create-order-id').value;
+    const customerId = document.getElementById('create-customer-id').value;
+    const orderDate = document.getElementById('create-order-date').value;
+    const amount = document.getElementById('create-amount').value;
+    const status = document.getElementById('create-status').value;
+
+    // Check if any field is empty
+    if (!orderId || !customerId || !orderDate || !amount || !status) {
+        alert("Please fill in all fields.");
+        return;
+    }
+
+    // Send POST request to create order
+    fetch(`${apiUrl}/orders`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ order_id: orderId, customer_id: customerId, order_date: orderDate, amount: amount, status: status })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.message === 'Order ID already exists') {
+            alert('This Order ID already exists!');
+        } else {
+            alert('Order Created!');
+            getOrders(); // Refresh orders
+        }
+    })
+    .catch(error => console.error('Error creating order:', error));
+}
+
+
+        // Update Order
+        function updateOrder() {
+            const orderId = document.getElementById('update-order-id').value;
+            const status = document.getElementById('update-order-status').value;
+
+            fetch(`${apiUrl}/orders/${orderId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ status: status })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('Order Updated!');
+                getOrders(); // Refresh orders
+            })
+            .catch(error => console.error('Error updating order:', error));
+        }
+
+        // Search Orders
+        function searchOrders() {
+            const customerId = document.getElementById('search-customer-id').value;
+            const status = document.getElementById('search-status').value;
+
+            fetch(`${apiUrl}/search`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ customer_id: customerId, status: status })
+            })
+            .then(response => response.json())
+            .then(data => {
+                renderOrders(data);
+            })
+            .catch(error => console.error('Error searching orders:', error));
+        }
+
+        // Get all orders
+        function getOrders() {
+            fetch(`${apiUrl}/orders`)
+                .then(response => response.json())
+                .then(data => {
+                    renderOrders(data);
+                })
+                .catch(error => console.error('Error fetching orders:', error));
+        }
+
+        // Render orders in the table
+        function renderOrders(orders) {
+            const ordersTbody = document.getElementById('orders-tbody');
+            ordersTbody.innerHTML = ''; // Clear the table
+
+            orders.forEach(order => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${order.order_id}</td>
+                    <td>${order.customer_id}</td>
+                    <td>${new Date(order.order_date).toLocaleString()}</td>
+                    <td>${order.amount}</td>
+                    <td>${order.status}</td>
+                    <td>
+                        <button onclick="deleteOrder('${order._id}')">Delete</button>
+                    </td>
+                `;
+                ordersTbody.appendChild(row);
+            });
+        }
+
+        // Delete Order
+        function deleteOrder(orderId) {
+            fetch(`${apiUrl}/orders/${orderId}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('Order Deleted!');
+                getOrders(); // Refresh orders
+            })
+            .catch(error => console.error('Error deleting order:', error));
+        }
+
+        // Initial fetch to populate orders
+        getOrders();
+    </script>
+</body>
+</html>
